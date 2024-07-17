@@ -62,7 +62,7 @@ async def on_message_edit(before, after):
 
 async def handle_twitter_links(message):
     # 링크가 백틱 사이에 있는지 확인
-    if any(part.startswith("`") and part.endswith("`") for part in re.split(r'(`[^`]*`)')):
+    if any(part.startswith("`") and part.endswith("`") for part in re.split(r'(`[^`]*`)', message.content)):
         return
 
     # 메시지에서 트위터 링크 찾기
@@ -122,7 +122,8 @@ async def update_delete_buttons(message, author_id):
     for component in message.components:
         for item in component.children:
             if isinstance(item, Button) and item.label == "Delete":
-                # 콜백 함수 변경
+                # 새로운 삭제 버튼 생성 및 콜백 함수 연결
+                delete_button = Button(label="Delete", style=discord.ButtonStyle.danger)
                 async def delete_message(interaction):
                     if interaction.user.id == author_id:
                         await interaction.message.delete()
@@ -131,10 +132,12 @@ async def update_delete_buttons(message, author_id):
                     else:
                         await interaction.response.send_message("이 메시지를 삭제할 권한이 없습니다.", ephemeral=True)
                 
-                item.callback = delete_message
-                view.add_item(item)
+                delete_button.callback = delete_message
+                view.add_item(delete_button)
             else:
-                view.add_item(item)
+                # 새로운 버튼 생성하여 뷰에 추가
+                new_button = Button(label=item.label, url=item.url, style=item.style)
+                view.add_item(new_button)
 
     await message.edit(view=view)
 
