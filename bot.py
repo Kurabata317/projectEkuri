@@ -34,12 +34,12 @@ button_message_data = load_button_message_data()
 async def on_ready():
     print(f'Logged in as {bot.user}')
     # 봇이 시작될 때 기존 메시지에 대해 버튼을 다시 설정
-    for message_id, author_id in button_message_data.items():
+    for message_id, data in button_message_data.items():
         channel = bot.get_channel(int(message_id.split('-')[0]))
         if channel:
             try:
                 message = await channel.fetch_message(int(message_id.split('-')[1]))
-                await add_buttons_to_message(message, int(author_id))
+                await add_buttons_to_message(message, data['author_id'], data['username_and_path'])
             except discord.NotFound:
                 pass  # 메시지를 찾을 수 없는 경우 무시
 
@@ -61,7 +61,6 @@ async def on_message(message):
         # 각 링크 생성
         vx_url = f"https://vxtwitter.com/{username_and_path}"
         
-        
         # 원본 메시지 삭제
         await message.delete()
 
@@ -71,7 +70,10 @@ async def on_message(message):
         await add_buttons_to_message(new_message, message.author.id, username_and_path)
 
         # 메시지와 저자의 ID를 저장
-        button_message_data[f'{message.channel.id}-{new_message.id}'] = message.author.id
+        button_message_data[f'{message.channel.id}-{new_message.id}'] = {
+            'author_id': message.author.id,
+            'username_and_path': username_and_path
+        }
         save_button_message_data(button_message_data)
         # print(f'Sent edited message from {message.author}: {new_message_content}')
 
