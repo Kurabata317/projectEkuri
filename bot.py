@@ -80,46 +80,46 @@ async def add_buttons_to_message(message, author_id):
     view = discord.ui.View()
 
     matches = twitter_url_pattern.finditer(message.content)
-    count = 1  # 버튼 라벨을 위한 카운터
     
     for match in matches:
-        username_and_path = match.group(1)  # 사용자 이름 및 경로 추출
-    
+        username_and_path = match.group(2)  # 사용자 이름 및 경로 추출
+
         # 링크 버튼 생성
         twitter_button = discord.ui.Button(
-            label=f"Twitter({count})",
+            label="Twitter",
             url=f"https://twitter.com/{username_and_path}",
             style=discord.ButtonStyle.link
         )
         x_button = discord.ui.Button(
-            label=f"X({count})",
+            label="X",
             url=f"https://x.com/{username_and_path}",
             style=discord.ButtonStyle.link
         )
-    
+        
+        # 삭제 버튼 생성
+        async def delete_message(interaction):
+            if interaction.user.id == author_id:
+                await interaction.message.delete()
+                # 삭제 버튼을 누르면 해당 메시지와 관련된 데이터 삭제
+                del button_message_data[f'{message.channel.id}-{message.id}']
+                save_button_message_data(button_message_data)
+            else:
+                await interaction.response.send_message("이 메시지를 삭제할 권한이 없습니다.", ephemeral=True)
+        
+        delete_button = discord.ui.Button(
+            label="Delete",
+            style=discord.ButtonStyle.danger,
+            callback=delete_message
+        )
+        
+        # 링크 버튼과 삭제 버튼을 뷰에 추가
         view.add_item(twitter_button)
         view.add_item(x_button)
-    
-        count += 1  # 카운터 증가
-    
-    # 삭제 버튼 생성
-    async def delete_message(interaction):
-        if interaction.user.id == author_id:
-            await interaction.message.delete()
-            # 이 아래는 필요한 로직을 추가하셔야 합니다.
-        else:
-            await interaction.response.send_message("이 메시지를 삭제할 권한이 없습니다.", ephemeral=True)
-    
-    delete_button = discord.ui.Button(
-        label="Delete",
-        style=discord.ButtonStyle.danger,
-        callback=delete_message
-    )
-    
-    view.add_item(delete_button)
-    
-    # 메시지에 View 추가
+        view.add_item(delete_button)
+
+    # 메시지에 뷰 추가
     await message.edit(view=view)
+
 
 # config.json에서 봇 토큰을 불러오는 함수
 def load_config():
