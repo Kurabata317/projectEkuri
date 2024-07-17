@@ -62,7 +62,7 @@ async def on_message_edit(before, after):
 
 async def handle_twitter_links(message):
     # 링크가 백틱 사이에 있는지 확인
-    if any(part.startswith("`") and part.endswith("`") for part in re.split(r'(`[^`]*`)')):
+    if any(part.startswith("`") and part.endswith("`") for part in re.split(r'(`[^`]*`)', message.content)):
         return
 
     # 메시지에서 트위터 링크 찾기
@@ -88,6 +88,7 @@ async def handle_twitter_links(message):
         # 작성자 ID 저장
         button_message_data[f'{message.channel.id}-{new_message.id}'] = message.author.id
         save_button_message_data(button_message_data)
+
 
 async def add_buttons_to_message(message, author_id, username_and_path):
     view = View()
