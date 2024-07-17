@@ -60,8 +60,7 @@ async def on_message(message):
         
         # 각 링크 생성
         vx_url = f"https://vxtwitter.com/{username_and_path}"
-        twitter_url = f"https://twitter.com/{username_and_path}"
-        x_url = f"https://x.com/{username_and_path}"
+        
         
         # 원본 메시지 삭제
         await message.delete()
@@ -69,19 +68,22 @@ async def on_message(message):
         # 사용자 멘션과 함께 새로운 메시지 전송
         new_message_content = f'{message.author.mention}\n{message.content.replace(original_url, vx_url)}'
         new_message = await message.channel.send(new_message_content)
-        await add_buttons_to_message(new_message, message.author.id)
+        await add_buttons_to_message(new_message, message.author.id, username_and_path)
 
         # 메시지와 저자의 ID를 저장
         button_message_data[f'{message.channel.id}-{new_message.id}'] = message.author.id
         save_button_message_data(button_message_data)
-        print(f'Sent edited message from {message.author}: {new_message_content}')
+        # print(f'Sent edited message from {message.author}: {new_message_content}')
 
-async def add_buttons_to_message(message, author_id):
+async def add_buttons_to_message(message, author_id, username_and_path):
     view = View()
 
+    twitter_url = f"https://twitter.com/{username_and_path}"
+    x_url = f"https://x.com/{username_and_path}"
+
     # 링크 버튼 생성
-    twitter_button = Button(label="Twitter", url=f"https://twitter.com/{message.content.split('/')[-1]}", style=discord.ButtonStyle.link)
-    x_button = Button(label="X", url=f"https://x.com/{message.content.split('/')[-1]}", style=discord.ButtonStyle.link)
+    twitter_button = Button(label="Twitter", url=twitter_url, style=discord.ButtonStyle.link)
+    x_button = Button(label="X", url=x_url, style=discord.ButtonStyle.link)
     
     # 삭제 버튼 생성
     async def delete_message(interaction):
