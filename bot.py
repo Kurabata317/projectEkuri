@@ -120,45 +120,21 @@ async def update_delete_buttons(message, author_id):
     components = message.components
 
     # 삭제 버튼 찾기
-    delete_button_index = None
-    for index, component in enumerate(components):
+    for component in components:
         if isinstance(component, View):
             for item in component.children:
                 if isinstance(item, Button) and item.label == "Delete":
-                    delete_button_index = index
-                    break
-            if delete_button_index is not None:
-                break
+                    # 콜백 함수 변경
+                    async def delete_message(interaction):
+                        if interaction.user.id == author_id:
+                            await interaction.message.delete()
+                            del button_message_data[f'{message.channel.id}-{message.id}']
+                            save_button_message_data(button_message_data)
+                        else:
+                            await interaction.response.send_message("이 메시지를 삭제할 권한이 없습니다.", ephemeral=True)
 
-    # 삭제 버튼이 존재하면 수정하기
-    if delete_button_index is not None:
-        async def delete_message(interaction):
-            if interaction.user.id == author_id:
-                await interaction.message.delete()
-                del button_message_data[f'{message.channel.id}-{message.id}']
-                save_button_message_data(button_message_data)
-            else:
-                await interaction.response.send_message("이 메시지를 삭제할 권한이 없습니다.", ephemeral=True)
-        
-        # 콜백 함수 변경
-        components[delete_button_index].children[2].callback = delete_message
-        await message.edit(components=components)
-    else:
-        # 삭제 버튼이 없으면 추가하기 (이 경우는 일반적으로 발생하지 않지만 예외 처리 목적으로 추가)
-        async def delete_message(interaction):
-            if interaction.user.id == author_id:
-                await interaction.message.delete()
-                del button_message_data[f'{message.channel.id}-{message.id}']
-                save_button_message_data(button_message_data)
-            else:
-                await interaction.response.send_message("이 메시지를 삭제할 권한이 없습니다.", ephemeral=True)
-        
-        delete_button = Button(label="Delete", style=discord.ButtonStyle.danger)
-        delete_button.callback = delete_message
-        view = View()
-        view.add_item(delete_button)
-        components.append(view)
-        await message.edit(components=components)
+                    item.callback = delete_message
+                    break
 
 
 # config.json에서 봇 토큰을 불러오는 함수
