@@ -80,7 +80,6 @@ async def add_buttons_to_message(message, author_id):
     view = discord.ui.View()
 
     matches = twitter_url_pattern.finditer(message.content)
-    buttons = []  # 버튼을 담을 리스트
     
     for match in matches:
         username_and_path = match.group(2)  # 사용자 이름 및 경로 추출
@@ -113,14 +112,10 @@ async def add_buttons_to_message(message, author_id):
             callback=delete_message
         )
         
-        # 버튼을 리스트에 추가
-        buttons.append(twitter_button)
-        buttons.append(x_button)
-        buttons.append(delete_button)
-    
-    # 뷰에 버튼들을 추가
-    for button in buttons:
-        view.add_item(button)
+        # 링크 버튼과 삭제 버튼을 뷰에 추가
+        view.add_item(twitter_button)
+        view.add_item(x_button)
+        view.add_item(delete_button)
 
     # 메시지에 뷰 추가
     await message.edit(view=view)
