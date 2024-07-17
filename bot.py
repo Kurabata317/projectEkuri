@@ -106,17 +106,19 @@ async def add_buttons_to_message(message, author_id):
     async def delete_message(interaction):
         if interaction.user.id == author_id:
             await interaction.message.delete()
-            del button_message_data[f'{message.channel.id}-{message.id}']
-            save_button_message_data(button_message_data)
+            # 이 아래는 필요한 로직을 추가하셔야 합니다.
         else:
             await interaction.response.send_message("이 메시지를 삭제할 권한이 없습니다.", ephemeral=True)
     
-    delete_button = Button(label="Delete", style=discord.ButtonStyle.danger)
-    delete_button.callback = delete_message
+    delete_button = discord.ui.Button(
+        label="Delete",
+        style=discord.ButtonStyle.danger,
+        callback=delete_message
+    )
     
-    # 링크 버튼 뷰에 추가
     view.add_item(delete_button)
-
+    
+    # 메시지에 View 추가
     await message.edit(view=view)
 
 # config.json에서 봇 토큰을 불러오는 함수
