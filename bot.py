@@ -9,6 +9,7 @@ from discord.ui import Button, View
 intents = discord.Intents.default()
 intents.messages = True  # 메시지 이벤트를 받을 수 있도록 설정
 intents.message_content = True  # 메시지 내용에 접근할 수 있도록 설정
+intents.message_edit = True  # 메시지 수정 이벤트를 받을 수 있도록 설정
 
 bot = commands.Bot(command_prefix='!', intents=intents)
 
@@ -48,6 +49,21 @@ async def on_ready():
 async def on_message(message):
     # 메시지가 봇 자신으로부터 온 것이라면 무시
     if message.author == bot.user:
+        return
+
+    await handle_twitter_links(message)
+
+@bot.event
+async def on_message_edit(before, after):
+    # 메시지가 봇 자신으로부터 온 것이라면 무시
+    if after.author == bot.user:
+        return
+
+    await handle_twitter_links(after)
+
+async def handle_twitter_links(message):
+    # 링크가 백틱 사이에 있는지 확인
+    if any(part.startswith("`") and part.endswith("`") for part in re.split(r'(`[^`]*`)', message.content)):
         return
 
     # 메시지에서 트위터 링크 찾기
