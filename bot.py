@@ -117,7 +117,9 @@ async def add_buttons_to_message(message, author_id):
             count += 1  # 버튼 카운터 증가
 
         # 모든 버튼을 한 번에 추가
-        view.add_item(*buttons)
+        for button in buttons:
+            view.add_item(button)
+            print(button)
 
         # 삭제 버튼 콜백 함수 정의
         async def delete_message(interaction):
@@ -138,6 +140,7 @@ async def add_buttons_to_message(message, author_id):
 
         # View를 메시지에 적용
         await message.edit(view=view)
+        print(view)
 
     # 콜백 함수 호출
     await add_buttons(view, message)
