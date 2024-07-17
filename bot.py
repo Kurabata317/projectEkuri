@@ -80,13 +80,19 @@ async def add_buttons_to_message(message, author_id):
     view = View()
 
     matches = twitter_url_pattern.finditer(message.content)
+    count = 0
     for match in matches:
+        count = count + 1
+        
         # original_url = match.group(0)
         username_and_path = match.group(2)
 
         # 링크 버튼 생성
-        twitter_button = Button(label="Twitter", url=f"https://twitter.com/{username_and_path}", style=discord.ButtonStyle.link)
-        x_button = Button(label="X", url=f"https://x.com/{username_and_path}", style=discord.ButtonStyle.link)
+        twitter_button = Button(label=f"Twitter({count})", url=f"https://twitter.com/{username_and_path}", style=discord.ButtonStyle.link)
+        x_button = Button(label=f"X({count})", url=f"https://x.com/{username_and_path}", style=discord.ButtonStyle.link)
+        
+        view.add_item(twitter_button)
+        view.add_item(x_button)
     
     # 삭제 버튼 생성
     async def delete_message(interaction):
@@ -101,8 +107,6 @@ async def add_buttons_to_message(message, author_id):
     delete_button.callback = delete_message
     
     # 링크 버튼 뷰에 추가
-    view.add_item(twitter_button)
-    view.add_item(x_button)
     view.add_item(delete_button)
 
     await message.edit(view=view)
