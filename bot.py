@@ -22,6 +22,10 @@ def modify_link(content):
 @bot.event
 async def on_ready():
     print(f'{bot.user} has connected to Discord!')
+    
+    # 보는 중 상태 설정
+    activity = discord.Activity(type=discord.ActivityType.watching, name="대책위원회 3장 챕터4 보는 중")
+    await bot.change_presence(status=discord.Status.online, activity=activity)
 
 @bot.event
 async def on_message(message):
