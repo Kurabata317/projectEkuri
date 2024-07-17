@@ -60,8 +60,8 @@ async def on_message(message):
         
         # 각 링크 생성
         vx_url = f"https://vxtwitter.com/{username_and_path}"
-        twitter_url = f"https://twitter.com/{username_and_path}"
-        x_url = f"https://x.com/{username_and_path}"
+        # twitter_url = f"https://twitter.com/{username_and_path}"
+        # x_url = f"https://x.com/{username_and_path}"
         
         # 원본 메시지 삭제
         await message.delete()
@@ -79,11 +79,12 @@ async def on_message(message):
 async def add_buttons_to_message(message, author_id):
     view = View()
 
-    print(message.content.split('/'))
+    match = twitter_url_pattern.finditer(message.content)
+    username_and_path = match.group(2)
 
     # 링크 버튼 생성
-    twitter_button = Button(label="Twitter", url=f"https://twitter.com/{message.content.split('/')[-1]}", style=discord.ButtonStyle.link)
-    x_button = Button(label="X", url=f"https://x.com/{message.content.split('/')[-1]}", style=discord.ButtonStyle.link)
+    twitter_button = Button(label="Twitter", url=f"https://twitter.com/{username_and_path}", style=discord.ButtonStyle.link)
+    x_button = Button(label="X", url=f"https://x.com/{username_and_path}", style=discord.ButtonStyle.link)
     
     # 삭제 버튼 생성
     async def delete_message(interaction):
