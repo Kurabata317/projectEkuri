@@ -116,24 +116,42 @@ async def add_buttons_to_message(message, author_id, username_and_path):
     await message.edit(view=view)
 
 async def update_delete_buttons(message, author_id):
-    view = View()
+    # 기존 메시지의 view 가져오기
+    view = message.view
 
-    # 삭제 버튼 생성
-    async def delete_message(interaction):
-        if interaction.user.id == author_id:
-            await interaction.message.delete()
-            del button_message_data[f'{message.channel.id}-{message.id}']
-            save_button_message_data(button_message_data)
-        else:
-            await interaction.response.send_message("이 메시지를 삭제할 권한이 없습니다.", ephemeral=True)
-    
-    delete_button = Button(label="Delete", style=discord.ButtonStyle.danger)
-    delete_button.callback = delete_message
-    
-    # 삭제 버튼 뷰에 추가
-    view.add_item(delete_button)
+    # 삭제 버튼 찾기
+    delete_button = None
+    for item in view.children:
+        if isinstance(item, Button) and item.label == "Delete":
+            delete_button = item
+            break
 
-    await message.edit(view=view)
+    # 삭제 버튼이 존재하면 수정하기
+    if delete_button:
+        async def delete_message(interaction):
+            if interaction.user.id == author_id:
+                await interaction.message.delete()
+                del button_message_data[f'{message.channel.id}-{message.id}']
+                save_button_message_data(button_message_data)
+            else:
+                await interaction.response.send_message("이 메시지를 삭제할 권한이 없습니다.", ephemeral=True)
+        
+        delete_button.callback = delete_message
+        await message.edit(view=view)
+    else:
+        # 삭제 버튼이 없으면 추가하기 (이 경우는 일반적으로 발생하지 않지만 예외 처리 목적으로 추가)
+        async def delete_message(interaction):
+            if interaction.user.id == author_id:
+                await interaction.message.delete()
+                del button_message_data[f'{message.channel.id}-{message.id}']
+                save_button_message_data(button_message_data)
+            else:
+                await interaction.response.send_message("이 메시지를 삭제할 권한이 없습니다.", ephemeral=True)
+        
+        delete_button = Button(label="Delete", style=discord.ButtonStyle.danger)
+        delete_button.callback = delete_message
+        view.add_item(delete_button)
+        await message.edit(view=view)
 
 # config.json에서 봇 토큰을 불러오는 함수
 def load_config():
