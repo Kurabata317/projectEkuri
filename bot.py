@@ -79,6 +79,8 @@ async def on_message(message):
 async def add_buttons_to_message(message, author_id):
     view = View()
 
+    print(message.content.split('/'))
+
     # 링크 버튼 생성
     twitter_button = Button(label="Twitter", url=f"https://twitter.com/{message.content.split('/')[-1]}", style=discord.ButtonStyle.link)
     x_button = Button(label="X", url=f"https://x.com/{message.content.split('/')[-1]}", style=discord.ButtonStyle.link)
