@@ -33,14 +33,14 @@ button_message_data = load_button_message_data()
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user}')
-    # 봇이 시작될 때 기존 메시지에 대해 버튼을 다시 설정
-    for message_id, data in button_message_data.items():
+    # 봇이 시작될 때 기존 메시지에 대해 삭제 버튼을 다시 설정
+    for message_id, author_id in button_message_data.items():
         channel_id, message_id = map(int, message_id.split('-'))
         channel = bot.get_channel(channel_id)
         if channel:
             try:
                 message = await channel.fetch_message(message_id)
-                await add_buttons_to_message(message, data['author_id'], data['username_and_path'], initialize=False)
+                await update_delete_buttons(message, author_id)
             except discord.NotFound:
                 pass  # 메시지를 찾을 수 없는 경우 무시
 
@@ -82,14 +82,11 @@ async def handle_twitter_links(message):
         new_message = await message.channel.send(new_message_content)
         await add_buttons_to_message(new_message, message.author.id, username_and_path)
 
-        # 메시지와 저자의 ID를 저장
-        button_message_data[f'{message.channel.id}-{new_message.id}'] = {
-            'author_id': message.author.id,
-            'username_and_path': username_and_path
-        }
+        # 작성자 ID 저장
+        button_message_data[f'{message.channel.id}-{new_message.id}'] = message.author.id
         save_button_message_data(button_message_data)
 
-async def add_buttons_to_message(message, author_id, username_and_path, initialize=True):
+async def add_buttons_to_message(message, author_id, username_and_path):
     view = View()
 
     twitter_url = f"https://twitter.com/{username_and_path}"
@@ -116,11 +113,27 @@ async def add_buttons_to_message(message, author_id, username_and_path, initiali
     view.add_item(x_button)
     view.add_item(delete_button)
 
-    # 초기화 여부에 따라 메시지 수정
-    if initialize:
-        await message.edit(view=view)
-    else:
-        await message.edit(view=view, content=message.content)  # 기존 내용을 유지하며 뷰만 갱신
+    await message.edit(view=view)
+
+async def update_delete_buttons(message, author_id):
+    view = View()
+
+    # 삭제 버튼 생성
+    async def delete_message(interaction):
+        if interaction.user.id == author_id:
+            await interaction.message.delete()
+            del button_message_data[f'{message.channel.id}-{message.id}']
+            save_button_message_data(button_message_data)
+        else:
+            await interaction.response.send_message("이 메시지를 삭제할 권한이 없습니다.", ephemeral=True)
+    
+    delete_button = Button(label="Delete", style=discord.ButtonStyle.danger)
+    delete_button.callback = delete_message
+    
+    # 삭제 버튼 뷰에 추가
+    view.add_item(delete_button)
+
+    await message.edit(view=view)
 
 # config.json에서 봇 토큰을 불러오는 함수
 def load_config():
