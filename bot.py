@@ -16,36 +16,9 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 twitter_url_pattern = re.compile(r"https?://(?:www\.)?(twitter|x)\.com/(\S+)")
 button_message_data_file = 'button_message_data.json'
 
-# 데이터를 파일에 저장하는 함수
-def save_button_message_data(data):
-    with open(button_message_data_file, 'w') as f:
-        json.dump(data, f)
-
-# 파일에서 데이터를 불러오는 함수
-def load_button_message_data():
-    if os.path.exists(button_message_data_file):
-        with open(button_message_data_file, 'r') as f:
-            return json.load(f)
-    return {}
-
-button_message_data = load_button_message_data()
-
 @bot.event
 async def on_ready():
-    global button_message_data  # 전역 변수로 선언된 button_message_data를 사용합니다.
-    
-    to_delete = []  # 삭제할 아이템을 저장할 리스트를 만듭니다.
-    
-    # 반복문 안에서 삭제를 진행하지 않고, 삭제할 아이템을 리스트에 추가합니다.
-    for message_id, author_id in button_message_data.items():
-        # 삭제 조건을 여기에 추가합니다.
-        to_delete.append(message_id)
-    
-    # 반복문이 끝나면 to_delete에 저장된 아이템을 삭제합니다.
-    for message_id in to_delete:
-        del button_message_data[message_id]
-        save_button_message_data(button_message_data)
-
+    print(f'Logged in as {bot.user}')
 
 @bot.event
 async def on_message(message):
@@ -64,8 +37,6 @@ async def on_message(message):
         
         # 각 링크 생성
         vx_url = f"https://vxtwitter.com/{username_and_path}"
-        # twitter_url = f"https://twitter.com/{username_and_path}"
-        # x_url = f"https://x.com/{username_and_path}"
         
         # 원본 메시지 삭제
         await message.delete()
@@ -75,11 +46,6 @@ async def on_message(message):
         new_message = await message.channel.send(new_message_content)
         await add_buttons_to_message(new_message, message.author.id)
 
-        # 메시지와 저자의 ID를 저장
-        button_message_data[f'{message.channel.id}-{new_message.id}'] = message.author.id
-        save_button_message_data(button_message_data)
-        # print(f'Sent edited message from {message.author}: {new_message_content}')
-
 async def add_buttons_to_message(message, author_id):
     # 새 View 객체 생성
     view = discord.ui.View()
@@ -88,11 +54,8 @@ async def add_buttons_to_message(message, author_id):
     matches = twitter_url_pattern.finditer(message.content)
     count = 1  # 버튼 레이블을 위한 카운터
 
-    # 버튼 리스트 생성
-    buttons = []
-
     for match in matches:
-        username_and_path = match.group(3)  # 사용자 이름 및 경로 추출
+        username_and_path = match.group(2)  # 사용자 이름 및 경로 추출
 
         # Twitter 링크 버튼 생성
         twitter_button = discord.ui.Button(
@@ -108,9 +71,9 @@ async def add_buttons_to_message(message, author_id):
             style=discord.ButtonStyle.link
         )
 
-        # 버튼 리스트에 추가
-        buttons.append(twitter_button)
-        buttons.append(x_button)
+        # View에 버튼 추가
+        view.add_item(twitter_button)
+        view.add_item(x_button)
 
         count += 1  # 버튼 카운터 증가
 
@@ -118,11 +81,6 @@ async def add_buttons_to_message(message, author_id):
     async def delete_message(interaction):
         if interaction.user.id == author_id:
             await interaction.message.delete()
-            # 메시지와 관련된 데이터 삭제
-            key = f'{message.channel.id}-{message.id}'
-            if key in button_message_data:
-                del button_message_data[key]
-                save_button_message_data(button_message_data)
         else:
             await interaction.response.send_message("이 메시지를 삭제할 권한이 없습니다.", ephemeral=True)
 
@@ -133,9 +91,7 @@ async def add_buttons_to_message(message, author_id):
     )
     delete_button.callback = delete_message
 
-    # View에 모든 버튼 추가
-    for button in buttons:
-        view.add_item(button)
+    # View에 삭제 버튼 추가
     view.add_item(delete_button)
 
     # View를 메시지에 적용
