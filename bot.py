@@ -1,92 +1,106 @@
-import json
 import discord
+import re
+import json
+import os
 from discord.ext import commands
 from discord.ui import Button, View
-import re
 
+# 봇에 사용할 권한 인텐트 설정
 intents = discord.Intents.default()
-intents.message_content = True
-bot = commands.Bot(command_prefix="!", intents=intents)
+intents.messages = True  # 메시지 이벤트를 받을 수 있도록 설정
+intents.message_content = True  # 메시지 내용에 접근할 수 있도록 설정
 
-TOKEN = 'YOUR_BOT_TOKEN'  # 봇 토큰을 여기에 입력하세요.
+bot = commands.Bot(command_prefix='!', intents=intents)
 
-# 본래 메시지를 전송할 함수
-async def resend_message(channel, original_author, modified_content, link_info):
-    class ResendView(View):
-        def __init__(self, author_id, twitter_url, x_url):
-            super().__init__(timeout=None)
-            self.author_id = author_id
+# 트위터 URL 정규 표현식
+twitter_url_pattern = re.compile(r"https?://(?:www\.)?(twitter|x)\.com/(\S+)")
+button_message_data_file = 'button_message_data.json'
 
-            if twitter_url:
-                self.add_item(Button(label="Twitter", url=twitter_url, style=discord.ButtonStyle.link))
-            if x_url:
-                self.add_item(Button(label="X", url=x_url, style=discord.ButtonStyle.link))
-            self.add_item(Button(label="1Delete", style=discord.ButtonStyle.danger, custom_id="delete_button"))
+# 데이터를 파일에 저장하는 함수
+def save_button_message_data(data):
+    with open(button_message_data_file, 'w') as f:
+        json.dump(data, f)
 
-        @discord.ui.button(label="2Delete", style=discord.ButtonStyle.danger)
-        async def delete_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-            if interaction.user.id == self.author_id:
-                await interaction.message.delete()
-            else:
-                await interaction.response.send_message("You do not have permission to delete this message.", ephemeral=True)
+# 파일에서 데이터를 불러오는 함수
+def load_button_message_data():
+    if os.path.exists(button_message_data_file):
+        with open(button_message_data_file, 'r') as f:
+            return json.load(f)
+    return {}
 
-    twitter_url = link_info.get('tw')
-    x_url = link_info.get('x')
-    
-    print(link_info)
-    
-    await channel.send(f"@{original_author.mention}\n{modified_content}", view=ResendView(original_author.id, twitter_url, x_url))
-
-# 메시지 수정 함수 (정규식 이용)
-def modify_links(content):
-    pattern = re.compile(r"https?://(?:www\.)?(twitter|x)\.com/(\S+)")
-    
-    link_info = {'tw': None, 'x': None, 'vx': None}
-
-    def replace_link(match):
-        domain = match.group(1)
-        path = match.group(2)
-        original_link = f"https://{domain}.com/{path}"
-        if domain == "twitter":
-            link_info['tw'] = original_link
-        elif domain == "x":
-            link_info['x'] = original_link
-        
-        vxtwitter_link = f"https://vxtwitter.com/{path}"
-        if not link_info['vx']:
-            link_info['vx'] = vxtwitter_link
-        return vxtwitter_link
-
-    modified_content = pattern.sub(replace_link, content)
-    
-    return modified_content, link_info
+button_message_data = load_button_message_data()
 
 @bot.event
 async def on_ready():
-    print(f'We have logged in as {bot.user}')
+    print(f'Logged in as {bot.user}')
+    # 봇이 시작될 때 기존 메시지에 대해 버튼을 다시 설정
+    for message_id, author_id in button_message_data.items():
+        channel = bot.get_channel(int(message_id.split('-')[0]))
+        if channel:
+            try:
+                message = await channel.fetch_message(int(message_id.split('-')[1]))
+                await add_buttons_to_message(message, int(author_id))
+            except discord.NotFound:
+                pass  # 메시지를 찾을 수 없는 경우 무시
 
 @bot.event
 async def on_message(message):
+    # 메시지가 봇 자신으로부터 온 것이라면 무시
     if message.author == bot.user:
         return
 
-    if ("https://twitter.com" in message.content or "https://x.com" in message.content) and "`" not in message.content:
-        original_content = message.content
-        modified_content, link_info = modify_links(original_content)
+    # 메시지를 콘솔에 출력
+    # print(f'Message from {message.author}: {message.content}')
+    
+    # 메시지에서 트위터 링크 찾기
+    matches = twitter_url_pattern.finditer(message.content)
+    for match in matches:
+        original_url = match.group(0)
+        username_and_path = match.group(2)
+        
+        # 각 링크 생성
+        vx_url = f"https://vxtwitter.com/{username_and_path}"
+        twitter_url = f"https://twitter.com/{username_and_path}"
+        x_url = f"https://x.com/{username_and_path}"
+        
+        # 원본 메시지 삭제
         await message.delete()
-        await resend_message(message.channel, message.author, modified_content, link_info)
-    await bot.process_commands(message)
 
-@bot.event
-async def on_message_edit(before, after):
-    if after.author == bot.user:
-        return
+        # 사용자 멘션과 함께 새로운 메시지 전송
+        new_message_content = f'{message.author.mention}\n{message.content.replace(original_url, vx_url)}'
+        new_message = await message.channel.send(new_message_content)
+        await add_buttons_to_message(new_message, message.author.id)
 
-    if ("https://twitter.com" in after.content or "https://x.com" in after.content) and "`" not in after.content:
-        original_content = after.content
-        modified_content, link_info = modify_links(original_content)
-        await after.delete()
-        await resend_message(after.channel, after.author, modified_content, link_info)
+        # 메시지와 저자의 ID를 저장
+        button_message_data[f'{message.channel.id}-{new_message.id}'] = message.author.id
+        save_button_message_data(button_message_data)
+        # print(f'Sent edited message from {message.author}: {new_message_content}')
+
+async def add_buttons_to_message(message, author_id):
+    view = View()
+
+    # 링크 버튼 생성
+    twitter_button = Button(label="Twitter", url=f"https://twitter.com/{message.content.split('/')[-1]}", style=discord.ButtonStyle.link)
+    x_button = Button(label="X", url=f"https://x.com/{message.content.split('/')[-1]}", style=discord.ButtonStyle.link)
+    
+    # 삭제 버튼 생성
+    async def delete_message(interaction):
+        if interaction.user.id == author_id:
+            await interaction.message.delete()
+            del button_message_data[f'{message.channel.id}-{message.id}']
+            save_button_message_data(button_message_data)
+        else:
+            await interaction.response.send_message("이 메시지를 삭제할 권한이 없습니다.", ephemeral=True)
+    
+    delete_button = Button(label="Delete", style=discord.ButtonStyle.danger)
+    delete_button.callback = delete_message
+    
+    # 링크 버튼 뷰에 추가
+    view.add_item(twitter_button)
+    view.add_item(x_button)
+    view.add_item(delete_button)
+
+    await message.edit(view=view)
 
 # config.json에서 봇 토큰을 불러오는 함수
 def load_config():
