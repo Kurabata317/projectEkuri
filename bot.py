@@ -145,6 +145,9 @@ async def update_delete_buttons(message, author_id):
                 else:
                     # 링크 버튼들은 그대로 유지
                     view.add_item(item)
+                
+                # 각 버튼의 label 출력
+                print(f"Added button with label: {item.label}")
 
     # 메시지에 새로운 View 설정
     await message.edit(view=view)
