@@ -71,8 +71,6 @@ async def on_message_edit(before, after):
         await after.delete()
         await resend_message(after.channel, after.author, original_content, modified_content)
 
-bot.run(TOKEN)
-
 # config.json에서 봇 토큰을 불러오는 함수
 def load_config():
     with open('config.json', 'r') as f:
