@@ -124,31 +124,29 @@ async def update_delete_buttons(message, author_id):
     # 새로운 View 생성
     view = View()
 
-    # 기존 View의 children을 순회하면서 재사용하거나 갱신
-    for item in message.components[0].children:  # components[0]은 View를 나타냄
-        if isinstance(item, discord.ui.Button):
-            if item.label == "Delete":
-                # 기존 삭제 버튼을 갱신
-                delete_button = Button(label="Delete", style=discord.ButtonStyle.danger)
+    if message.components:
+        # 기존 View의 children을 순회하면서 재사용하거나 갱신
+        for item in message.components[0].children:  # components[0]은 View를 나타냄
+            if isinstance(item, discord.ui.Button):
+                if item.label == "Delete":
+                    # 기존 삭제 버튼을 갱신
+                    delete_button = Button(label="Delete", style=discord.ButtonStyle.danger)
 
-                # 콜백 함수 내에서 사용자 ID를 클로저로 저장
-                async def delete_message(interaction):
-                    nonlocal author_id  # 클로저에서 외부 변수 사용
-                    if interaction.user.id == author_id:
-                        await interaction.message.delete()
-                        del button_message_data[f'{message.channel.id}-{message.id}']
-                        save_button_message_data(button_message_data)
-                    else:
-                        await interaction.response.send_message("이 메시지를 삭제할 권한이 없습니다.", ephemeral=True)
+                    # 콜백 함수 내에서 사용자 ID를 클로저로 저장
+                    async def delete_message(interaction):
+                        nonlocal author_id  # 클로저에서 외부 변수 사용
+                        if interaction.user.id == author_id:
+                            await interaction.message.delete()
+                            del button_message_data[f'{message.channel.id}-{message.id}']
+                            save_button_message_data(button_message_data)
+                        else:
+                            await interaction.response.send_message("이 메시지를 삭제할 권한이 없습니다.", ephemeral=True)
 
-                delete_button.callback = delete_message
-                view.add_item(delete_button)
-            else:
-                # 링크 버튼들은 그대로 유지
-                view.add_item(item)
-
-    # 메시지에 새로운 View 설정
-    await message.edit(view=view)
+                    delete_button.callback = delete_message
+                    view.add_item(delete_button)
+                else:
+                    # 링크 버튼들은 그대로 유지
+                    view.add_item(item)
 
     # 메시지에 새로운 View 설정
     await message.edit(view=view)
