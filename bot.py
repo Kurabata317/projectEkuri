@@ -9,7 +9,6 @@ from discord.ui import Button, View
 intents = discord.Intents.default()
 intents.messages = True  # 메시지 이벤트를 받을 수 있도록 설정
 intents.message_content = True  # 메시지 내용에 접근할 수 있도록 설정
-intents.message_edit = True  # 메시지 수정 이벤트를 받을 수 있도록 설정
 
 bot = commands.Bot(command_prefix='!', intents=intents)
 
