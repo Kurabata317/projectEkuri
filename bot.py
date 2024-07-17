@@ -124,12 +124,14 @@ async def update_delete_buttons(message, author_id):
     # 새로운 View 생성
     view = View()
 
+    # 기존 버튼들을 순회하면서 재사용하거나 갱신
     for component in message.components:
         for item in component.children:
             if isinstance(item, discord.ui.Button):
                 if item.label == "Delete":
-                    # 새로운 삭제 버튼 생성 및 콜백 함수 연결
+                    # 기존 삭제 버튼을 갱신
                     delete_button = Button(label="Delete", style=discord.ButtonStyle.danger)
+
                     async def delete_message(interaction):
                         if interaction.user.id == author_id:
                             await interaction.message.delete()
@@ -137,14 +139,14 @@ async def update_delete_buttons(message, author_id):
                             save_button_message_data(button_message_data)
                         else:
                             await interaction.response.send_message("이 메시지를 삭제할 권한이 없습니다.", ephemeral=True)
-                    
+
                     delete_button.callback = delete_message
                     view.add_item(delete_button)
                 else:
-                    # 새로운 버튼 생성하여 뷰에 추가
-                    new_button = Button(label=item.label, url=item.url, style=item.style)
-                    view.add_item(new_button)
+                    # 링크 버튼들은 그대로 유지
+                    view.add_item(item)
 
+    # 메시지에 새로운 View 설정
     await message.edit(view=view)
 
 # config.json에서 봇 토큰을 불러오는 함수
