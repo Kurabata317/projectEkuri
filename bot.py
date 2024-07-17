@@ -13,17 +13,13 @@ TOKEN = 'YOUR_BOT_TOKEN'  # 봇 토큰을 여기에 입력하세요.
 # 본래 메시지를 전송할 함수
 async def resend_message(channel, original_author, original_content, modified_content):
     class ResendView(View):
-        def __init__(self, author_id):
+        def __init__(self, author_id, twitter_url, x_url):
             super().__init__(timeout=None)
             self.author_id = author_id
 
-        @discord.ui.button(label="Twitter", style=discord.ButtonStyle.link, url="https://twitter.com")
-        async def twitter_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-            pass
-
-        @discord.ui.button(label="X", style=discord.ButtonStyle.link, url="https://x.com")
-        async def x_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-            pass
+            self.add_item(Button(label="Twitter", url=twitter_url, style=discord.ButtonStyle.link))
+            self.add_item(Button(label="X", url=x_url, style=discord.ButtonStyle.link))
+            self.add_item(Button(label="Delete", style=discord.ButtonStyle.danger, custom_id="delete_button"))
 
         @discord.ui.button(label="Delete", style=discord.ButtonStyle.danger)
         async def delete_button(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -32,7 +28,10 @@ async def resend_message(channel, original_author, original_content, modified_co
             else:
                 await interaction.response.send_message("You do not have permission to delete this message.", ephemeral=True)
 
-    await channel.send(f"@{original_author.mention}\n{modified_content}", view=ResendView(original_author.id))
+    twitter_url = "https://twitter.com"
+    x_url = "https://x.com"
+    
+    await channel.send(f"@{original_author.mention}\n{modified_content}", view=ResendView(original_author.id, twitter_url, x_url))
 
 # 메시지 수정 함수
 def modify_links(content):
