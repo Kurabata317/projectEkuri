@@ -35,8 +35,11 @@ async def on_ready():
     global button_message_data  # 전역 변수로 선언된 button_message_data를 사용합니다.
     print(f'Logged in as {bot.user}')
 
+    # 복사본을 사용하여 반복
+    button_message_data_copy = button_message_data.copy()
+
     # 기존 메시지에 삭제 버튼 리프레시
-    for message_id, author_id in button_message_data.items():
+    for message_id, author_id in button_message_data_copy.items():
         channel_id, msg_id = map(int, message_id.split('-'))
         channel = bot.get_channel(channel_id)
         if channel:
@@ -85,7 +88,7 @@ async def add_buttons_to_message(message, author_id):
 
     # 콜백 함수 정의
     async def add_buttons(view, message):
-        matches = twitter_url_pattern.finditer(message.content)
+        matches = list(twitter_url_pattern.finditer(message.content))
         count = 1  # 버튼 레이블을 위한 카운터
 
         buttons = []  # 버튼들을 저장할 리스트
@@ -113,32 +116,32 @@ async def add_buttons_to_message(message, author_id):
 
             count += 1  # 버튼 카운터 증가
 
-        return buttons
+        # 모든 버튼을 한 번에 추가
+        for button in buttons:
+            view.add_item(button)
 
-    # 버튼 추가 작업 수행
-    buttons = await add_buttons(view, message)
-    for button in buttons:
-        view.add_item(button)
+        # 삭제 버튼 콜백 함수 정의
+        async def delete_message(interaction):
+            if interaction.user.id == author_id:
+                await interaction.message.delete()
+            else:
+                await interaction.response.send_message("이 메시지를 삭제할 권한이 없습니다.", ephemeral=True)
 
-    # 삭제 버튼 콜백 함수 정의
-    async def delete_message(interaction):
-        if interaction.user.id == author_id:
-            await interaction.message.delete()
-        else:
-            await interaction.response.send_message("이 메시지를 삭제할 권한이 없습니다.", ephemeral=True)
+        # 삭제 버튼 생성 및 콜백 설정
+        delete_button = discord.ui.Button(
+            label="Delete",
+            style=discord.ButtonStyle.danger,
+        )
+        delete_button.callback = delete_message
 
-    # 삭제 버튼 생성 및 콜백 설정
-    delete_button = discord.ui.Button(
-        label="Delete",
-        style=discord.ButtonStyle.danger,
-    )
-    delete_button.callback = delete_message
+        # View에 삭제 버튼 추가
+        view.add_item(delete_button)
 
-    # View에 삭제 버튼 추가
-    view.add_item(delete_button)
+        # View를 메시지에 적용
+        await message.edit(view=view)
 
-    # View를 메시지에 적용
-    await message.edit(view=view)
+    # 콜백 함수 호출
+    await add_buttons(view, message)
 
 # config.json에서 봇 토큰을 불러오는 함수
 def load_config():
