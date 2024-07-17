@@ -62,7 +62,7 @@ async def on_message_edit(before, after):
 
 async def handle_twitter_links(message):
     # 링크가 백틱 사이에 있는지 확인
-    if any(part.startswith("`") and part.endswith("`") for part in re.split(r'(`[^`]*`)', message.content)):
+    if any(part.startswith("`") and part.endswith("`") for part in re.split(r'(`[^`]*`)')):
         return
 
     # 메시지에서 트위터 링크 찾기
@@ -117,25 +117,26 @@ async def add_buttons_to_message(message, author_id, username_and_path):
 
 async def update_delete_buttons(message, author_id):
     # 기존 메시지의 components 가져오기
-    components = message.components
+    view = View()
 
-    # 삭제 버튼 찾기
-    for component in components:
-        if isinstance(component, View):
-            for item in component.children:
-                if isinstance(item, Button) and item.label == "Delete":
-                    # 콜백 함수 변경
-                    async def delete_message(interaction):
-                        if interaction.user.id == author_id:
-                            await interaction.message.delete()
-                            del button_message_data[f'{message.channel.id}-{message.id}']
-                            save_button_message_data(button_message_data)
-                        else:
-                            await interaction.response.send_message("이 메시지를 삭제할 권한이 없습니다.", ephemeral=True)
+    for component in message.components:
+        for item in component.children:
+            if isinstance(item, Button) and item.label == "Delete":
+                # 콜백 함수 변경
+                async def delete_message(interaction):
+                    if interaction.user.id == author_id:
+                        await interaction.message.delete()
+                        del button_message_data[f'{message.channel.id}-{message.id}']
+                        save_button_message_data(button_message_data)
+                    else:
+                        await interaction.response.send_message("이 메시지를 삭제할 권한이 없습니다.", ephemeral=True)
+                
+                item.callback = delete_message
+                view.add_item(item)
+            else:
+                view.add_item(item)
 
-                    item.callback = delete_message
-                    break
-
+    await message.edit(view=view)
 
 # config.json에서 봇 토큰을 불러오는 함수
 def load_config():
