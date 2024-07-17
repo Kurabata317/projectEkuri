@@ -62,7 +62,7 @@ async def on_message_edit(before, after):
 
 async def handle_twitter_links(message):
     # 링크가 백틱 사이에 있는지 확인
-    if any(part.startswith("`") and part.endswith("`") for part in re.split(r'(`[^`]*`)', message.content)):
+    if any(part.startswith("`") and part.endswith("`") for part in re.split(r'(`[^`]*`)')):
         return
 
     # 메시지에서 트위터 링크 찾기
@@ -73,9 +73,12 @@ async def handle_twitter_links(message):
         
         # 각 링크 생성
         vx_url = f"https://vxtwitter.com/{username_and_path}"
-        
-        # 원본 메시지 삭제
-        await message.delete()
+
+        # 원본 메시지가 존재하는지 확인
+        try:
+            await message.delete()
+        except discord.NotFound:
+            return
 
         # 사용자 멘션과 함께 새로운 메시지 전송
         new_message_content = f'{message.author.mention}\n{message.content.replace(original_url, vx_url)}'
@@ -97,6 +100,8 @@ async def add_buttons_to_message(message, author_id, username_and_path):
     x_button = Button(label="X", url=x_url, style=discord.ButtonStyle.link)
     
     # 삭제 버튼 생성
+    delete_button = Button(label="Delete", style=discord.ButtonStyle.danger)
+    
     async def delete_message(interaction):
         if interaction.user.id == author_id:
             await interaction.message.delete()
@@ -105,10 +110,9 @@ async def add_buttons_to_message(message, author_id, username_and_path):
         else:
             await interaction.response.send_message("이 메시지를 삭제할 권한이 없습니다.", ephemeral=True)
     
-    delete_button = Button(label="Delete", style=discord.ButtonStyle.danger)
     delete_button.callback = delete_message
     
-    # 링크 버튼 뷰에 추가
+    # 버튼을 뷰에 추가
     view.add_item(twitter_button)
     view.add_item(x_button)
     view.add_item(delete_button)
@@ -116,28 +120,29 @@ async def add_buttons_to_message(message, author_id, username_and_path):
     await message.edit(view=view)
 
 async def update_delete_buttons(message, author_id):
-    # 기존 메시지의 components 가져오기
+    # 새로운 View 생성
     view = View()
 
     for component in message.components:
         for item in component.children:
-            if isinstance(item, Button) and item.label == "Delete":
-                # 새로운 삭제 버튼 생성 및 콜백 함수 연결
-                delete_button = Button(label="Delete", style=discord.ButtonStyle.danger)
-                async def delete_message(interaction):
-                    if interaction.user.id == author_id:
-                        await interaction.message.delete()
-                        del button_message_data[f'{message.channel.id}-{message.id}']
-                        save_button_message_data(button_message_data)
-                    else:
-                        await interaction.response.send_message("이 메시지를 삭제할 권한이 없습니다.", ephemeral=True)
-                
-                delete_button.callback = delete_message
-                view.add_item(delete_button)
-            else:
-                # 새로운 버튼 생성하여 뷰에 추가
-                new_button = Button(label=item.label, url=item.url, style=item.style)
-                view.add_item(new_button)
+            if isinstance(item, discord.ui.Button):
+                if item.label == "Delete":
+                    # 새로운 삭제 버튼 생성 및 콜백 함수 연결
+                    delete_button = Button(label="Delete", style=discord.ButtonStyle.danger)
+                    async def delete_message(interaction):
+                        if interaction.user.id == author_id:
+                            await interaction.message.delete()
+                            del button_message_data[f'{message.channel.id}-{message.id}']
+                            save_button_message_data(button_message_data)
+                        else:
+                            await interaction.response.send_message("이 메시지를 삭제할 권한이 없습니다.", ephemeral=True)
+                    
+                    delete_button.callback = delete_message
+                    view.add_item(delete_button)
+                else:
+                    # 새로운 버튼 생성하여 뷰에 추가
+                    new_button = Button(label=item.label, url=item.url, style=item.style)
+                    view.add_item(new_button)
 
     await message.edit(view=view)
 
