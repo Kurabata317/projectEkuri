@@ -93,6 +93,10 @@ async def add_buttons_to_message(message, author_id):
 
         buttons = []  # 버튼들을 저장할 리스트
 
+        print(message)
+        print(message.content)
+        print(matches)
+
         for match in matches:
             username_and_path = match.group(2)  # 사용자 이름 및 경로 추출
 
@@ -119,8 +123,7 @@ async def add_buttons_to_message(message, author_id):
         # 모든 버튼을 한 번에 추가
         for button in buttons:
             view.add_item(button)
-            print(button)
-
+            
         # 삭제 버튼 콜백 함수 정의
         async def delete_message(interaction):
             if interaction.user.id == author_id:
