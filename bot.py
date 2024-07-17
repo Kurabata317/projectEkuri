@@ -21,9 +21,9 @@ async def resend_message(channel, original_author, modified_content, link_info):
                 self.add_item(Button(label="Twitter", url=twitter_url, style=discord.ButtonStyle.link))
             if x_url:
                 self.add_item(Button(label="X", url=x_url, style=discord.ButtonStyle.link))
-            self.add_item(Button(label="Delete", style=discord.ButtonStyle.danger, custom_id="delete_button"))
+            self.add_item(Button(label="1Delete", style=discord.ButtonStyle.danger, custom_id="delete_button"))
 
-        @discord.ui.button(label="Delete", style=discord.ButtonStyle.danger)
+        @discord.ui.button(label="2Delete", style=discord.ButtonStyle.danger)
         async def delete_button(self, interaction: discord.Interaction, button: discord.ui.Button):
             if interaction.user.id == self.author_id:
                 await interaction.message.delete()
@@ -32,6 +32,8 @@ async def resend_message(channel, original_author, modified_content, link_info):
 
     twitter_url = link_info.get('tw')
     x_url = link_info.get('x')
+    
+    print(link_info)
     
     await channel.send(f"@{original_author.mention}\n{modified_content}", view=ResendView(original_author.id, twitter_url, x_url))
 
