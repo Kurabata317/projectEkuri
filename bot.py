@@ -84,25 +84,27 @@ async def add_buttons_to_message(message, author_id):
     view = discord.ui.View()
 
     matches = twitter_url_pattern.finditer(message.content)
-    buttons = []  # 버튼을 담을 리스트
+    count = 1  # 버튼 라벨을 위한 카운터
     
     for match in matches:
         username_and_path = match.group(2)  # 사용자 이름 및 경로 추출
     
         # 링크 버튼 생성
         twitter_button = discord.ui.Button(
-            label="Twitter",
+            label=f"Twitter({count})",
             url=f"https://twitter.com/{username_and_path}",
             style=discord.ButtonStyle.link
         )
         x_button = discord.ui.Button(
-            label="X",
+            label=f"X({count})",
             url=f"https://x.com/{username_and_path}",
             style=discord.ButtonStyle.link
         )
         
-        buttons.append(twitter_button)
-        buttons.append(x_button)
+        view.add_item(twitter_button)
+        view.add_item(x_button)
+        
+        count += 1  # 버튼 카운터 증가
     
     # 삭제 버튼 생성 및 콜백 함수 설정
     async def delete_message(interaction):
@@ -120,14 +122,10 @@ async def add_buttons_to_message(message, author_id):
     )
     delete_button.callback = delete_message
     
-    buttons.append(delete_button)
+    view.add_item(delete_button)
     
-    # 버튼 리스트를 한 번에 view에 추가
-    view.add_items(*buttons)
-
     # 메시지에 뷰 적용
     await message.edit(view=view)
-
 
 # config.json에서 봇 토큰을 불러오는 함수
 def load_config():
