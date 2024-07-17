@@ -35,11 +35,12 @@ async def on_ready():
     print(f'Logged in as {bot.user}')
     # 봇이 시작될 때 기존 메시지에 대해 버튼을 다시 설정
     for message_id, data in button_message_data.items():
-        channel = bot.get_channel(int(message_id.split('-')[0]))
+        channel_id, message_id = map(int, message_id.split('-'))
+        channel = bot.get_channel(channel_id)
         if channel:
             try:
-                message = await channel.fetch_message(int(message_id.split('-')[1]))
-                await add_buttons_to_message(message, data['author_id'], data['username_and_path'])
+                message = await channel.fetch_message(message_id)
+                await add_buttons_to_message(message, data['author_id'], data['username_and_path'], initialize=False)
             except discord.NotFound:
                 pass  # 메시지를 찾을 수 없는 경우 무시
 
@@ -49,9 +50,6 @@ async def on_message(message):
     if message.author == bot.user:
         return
 
-    # 메시지를 콘솔에 출력
-    # print(f'Message from {message.author}: {message.content}')
-    
     # 메시지에서 트위터 링크 찾기
     matches = twitter_url_pattern.finditer(message.content)
     for match in matches:
@@ -75,9 +73,8 @@ async def on_message(message):
             'username_and_path': username_and_path
         }
         save_button_message_data(button_message_data)
-        # print(f'Sent edited message from {message.author}: {new_message_content}')
 
-async def add_buttons_to_message(message, author_id, username_and_path):
+async def add_buttons_to_message(message, author_id, username_and_path, initialize=True):
     view = View()
 
     twitter_url = f"https://twitter.com/{username_and_path}"
@@ -104,7 +101,14 @@ async def add_buttons_to_message(message, author_id, username_and_path):
     view.add_item(x_button)
     view.add_item(delete_button)
 
-    await message.edit(view=view)
+    # 초기화 여부에 따라 메시지 수정
+    if initialize:
+        await message.edit(view=view)
+    else:
+        await message.edit(view=view, content=message.content)  # 기존 내용을 유지하며 뷰만 갱신
+
+bot.run('YOUR_BOT_TOKEN')
+
 
 # config.json에서 봇 토큰을 불러오는 함수
 def load_config():
