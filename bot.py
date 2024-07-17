@@ -107,9 +107,6 @@ async def add_buttons_to_message(message, author_id, username_and_path, initiali
     else:
         await message.edit(view=view, content=message.content)  # 기존 내용을 유지하며 뷰만 갱신
 
-bot.run('YOUR_BOT_TOKEN')
-
-
 # config.json에서 봇 토큰을 불러오는 함수
 def load_config():
     with open('config.json', 'r') as f:
