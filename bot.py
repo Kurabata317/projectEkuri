@@ -79,12 +79,14 @@ async def on_message(message):
 async def add_buttons_to_message(message, author_id):
     view = View()
 
-    match = twitter_url_pattern.finditer(message.content)
-    username_and_path = match.group(2)
+    matches = twitter_url_pattern.finditer(message.content)
+    for match in matches:
+        # original_url = match.group(0)
+        username_and_path = match.group(2)
 
-    # 링크 버튼 생성
-    twitter_button = Button(label="Twitter", url=f"https://twitter.com/{username_and_path}", style=discord.ButtonStyle.link)
-    x_button = Button(label="X", url=f"https://x.com/{username_and_path}", style=discord.ButtonStyle.link)
+        # 링크 버튼 생성
+        twitter_button = Button(label="Twitter", url=f"https://twitter.com/{username_and_path}", style=discord.ButtonStyle.link)
+        x_button = Button(label="X", url=f"https://x.com/{username_and_path}", style=discord.ButtonStyle.link)
     
     # 삭제 버튼 생성
     async def delete_message(interaction):
