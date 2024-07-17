@@ -88,6 +88,8 @@ async def add_buttons_to_message(message, author_id):
         matches = twitter_url_pattern.finditer(message.content)
         count = 1  # 버튼 레이블을 위한 카운터
 
+        buttons = []  # 버튼들을 저장할 리스트
+
         for match in matches:
             username_and_path = match.group(2)  # 사용자 이름 및 경로 추출
 
@@ -105,14 +107,18 @@ async def add_buttons_to_message(message, author_id):
                 style=discord.ButtonStyle.link
             )
 
-            # View에 버튼 추가
-            view.add_item(twitter_button)
-            view.add_item(x_button)
+            # 버튼 리스트에 추가
+            buttons.append(twitter_button)
+            buttons.append(x_button)
 
             count += 1  # 버튼 카운터 증가
 
+        return buttons
+
     # 버튼 추가 작업 수행
-    await add_buttons(view, message)
+    buttons = await add_buttons(view, message)
+    for button in buttons:
+        view.add_item(button)
 
     # 삭제 버튼 콜백 함수 정의
     async def delete_message(interaction):
