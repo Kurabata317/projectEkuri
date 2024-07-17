@@ -81,50 +81,64 @@ async def on_message(message):
         # print(f'Sent edited message from {message.author}: {new_message_content}')
 
 async def add_buttons_to_message(message, author_id):
+    # 새 View 객체 생성
     view = discord.ui.View()
 
+    # 메시지 내용에서 모든 Twitter URL 매칭 찾기
     matches = twitter_url_pattern.finditer(message.content)
-    count = 1  # 버튼 라벨을 위한 카운터
-    
+    count = 1  # 버튼 레이블을 위한 카운터
+
+    # 버튼 리스트 생성
+    buttons = []
+
     for match in matches:
-        username_and_path = match.group(2)  # 사용자 이름 및 경로 추출
-    
-        # 링크 버튼 생성
+        username_and_path = match.group(3)  # 사용자 이름 및 경로 추출
+
+        # Twitter 링크 버튼 생성
         twitter_button = discord.ui.Button(
             label=f"Twitter({count})",
             url=f"https://twitter.com/{username_and_path}",
             style=discord.ButtonStyle.link
         )
+
+        # X 링크 버튼 생성
         x_button = discord.ui.Button(
             label=f"X({count})",
             url=f"https://x.com/{username_and_path}",
             style=discord.ButtonStyle.link
         )
-        
-        view.add_item(twitter_button)
-        view.add_item(x_button)
-        
+
+        # 버튼 리스트에 추가
+        buttons.append(twitter_button)
+        buttons.append(x_button)
+
         count += 1  # 버튼 카운터 증가
-    
-    # 삭제 버튼 생성 및 콜백 함수 설정
+
+    # 삭제 버튼 콜백 함수 정의
     async def delete_message(interaction):
         if interaction.user.id == author_id:
             await interaction.message.delete()
-            # 삭제 버튼을 누르면 해당 메시지와 관련된 데이터 삭제
-            del button_message_data[f'{message.channel.id}-{message.id}']
-            save_button_message_data(button_message_data)
+            # 메시지와 관련된 데이터 삭제
+            key = f'{message.channel.id}-{message.id}'
+            if key in button_message_data:
+                del button_message_data[key]
+                save_button_message_data(button_message_data)
         else:
             await interaction.response.send_message("이 메시지를 삭제할 권한이 없습니다.", ephemeral=True)
-    
+
+    # 삭제 버튼 생성 및 콜백 설정
     delete_button = discord.ui.Button(
         label="Delete",
         style=discord.ButtonStyle.danger,
     )
     delete_button.callback = delete_message
-    
+
+    # View에 모든 버튼 추가
+    for button in buttons:
+        view.add_item(button)
     view.add_item(delete_button)
-    
-    # 메시지에 뷰 적용
+
+    # View를 메시지에 적용
     await message.edit(view=view)
 
 # config.json에서 봇 토큰을 불러오는 함수
