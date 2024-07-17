@@ -32,16 +32,20 @@ button_message_data = load_button_message_data()
 
 @bot.event
 async def on_ready():
-    print(f'Logged in as {bot.user}')
-    # 봇이 시작될 때 기존 메시지에 대해 버튼을 다시 설정
+    global button_message_data  # 전역 변수로 선언된 button_message_data를 사용합니다.
+    
+    to_delete = []  # 삭제할 아이템을 저장할 리스트를 만듭니다.
+    
+    # 반복문 안에서 삭제를 진행하지 않고, 삭제할 아이템을 리스트에 추가합니다.
     for message_id, author_id in button_message_data.items():
-        channel = bot.get_channel(int(message_id.split('-')[0]))
-        if channel:
-            try:
-                message = await channel.fetch_message(int(message_id.split('-')[1]))
-                await add_buttons_to_message(message, int(author_id))
-            except discord.NotFound:
-                pass  # 메시지를 찾을 수 없는 경우 무시
+        # 삭제 조건을 여기에 추가합니다.
+        to_delete.append(message_id)
+    
+    # 반복문이 끝나면 to_delete에 저장된 아이템을 삭제합니다.
+    for message_id in to_delete:
+        del button_message_data[message_id]
+        save_button_message_data(button_message_data)
+
 
 @bot.event
 async def on_message(message):
