@@ -77,22 +77,30 @@ async def on_message(message):
         # print(f'Sent edited message from {message.author}: {new_message_content}')
 
 async def add_buttons_to_message(message, author_id):
-    view = View()
+    view = discord.ui.View()
 
     matches = twitter_url_pattern.finditer(message.content)
-    count = 0
+    count = 1  # 버튼 라벨을 위한 카운터
+    
     for match in matches:
-        count = count + 1
-        
-        # original_url = match.group(0)
-        username_and_path = match.group(2)
-
+        username_and_path = match.group(1)  # 사용자 이름 및 경로 추출
+    
         # 링크 버튼 생성
-        twitter_button = Button(label=f"Twitter({count})", url=f"https://twitter.com/{username_and_path}", style=discord.ButtonStyle.link)
-        x_button = Button(label=f"X({count})", url=f"https://x.com/{username_and_path}", style=discord.ButtonStyle.link)
-        
+        twitter_button = discord.ui.Button(
+            label=f"Twitter({count})",
+            url=f"https://twitter.com/{username_and_path}",
+            style=discord.ButtonStyle.link
+        )
+        x_button = discord.ui.Button(
+            label=f"X({count})",
+            url=f"https://x.com/{username_and_path}",
+            style=discord.ButtonStyle.link
+        )
+    
         view.add_item(twitter_button)
         view.add_item(x_button)
+    
+        count += 1  # 카운터 증가
     
     # 삭제 버튼 생성
     async def delete_message(interaction):
