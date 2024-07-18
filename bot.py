@@ -35,7 +35,7 @@ async def on_message(message):
     if is_valid_message(message.content):
         await message.delete()
         modified_content = modify_link(message.content)
-        sent_message = await message.channel.send(f'{message.author.mention} {modified_content}')
+        sent_message = await message.channel.send(f'{message.author.mention}\n{modified_content}')
 
         original_link = [word for word in message.content.split() if word.startswith("https://twitter.com") or word.startswith("https://x.com")][0]
         view = discord.ui.View()
