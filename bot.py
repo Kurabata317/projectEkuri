@@ -39,8 +39,8 @@ async def on_message(message):
 
         original_link = [word for word in message.content.split() if word.startswith("https://twitter.com") or word.startswith("https://x.com")][0]
         view = discord.ui.View()
-        view.add_item(discord.ui.Button(label="Twitter", style=discord.ButtonStyle.link, url=original_link))
-        view.add_item(discord.ui.Button(label="X", style=discord.ButtonStyle.link, url=original_link.replace("twitter.com", "x.com")))
+        view.add_item(discord.ui.Button(label="Open", style=discord.ButtonStyle.link, url=original_link))
+        # view.add_item(discord.ui.Button(label="X", style=discord.ButtonStyle.link, url=original_link.replace("twitter.com", "x.com")))
         view.add_item(discord.ui.Button(label="Delete", style=discord.ButtonStyle.danger, custom_id=f"delete_{sent_message.id}"))
 
         await sent_message.edit(view=view)
