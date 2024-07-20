@@ -19,7 +19,7 @@ def is_valid_message(content, return_type):
 
     matches = re.findall(pattern, content)
     
-    print(matchs)
+    print(matches)
     
     if len(matches) == 1:
         if return_type == "s":
