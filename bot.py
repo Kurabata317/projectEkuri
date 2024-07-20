@@ -45,7 +45,7 @@ def modify_link(content):
                 # 스포 시 링크 가리기
                 conv_word = "||"+conv_word+"||"
                 
-            return_content.replace(word, conv_word)
+            return_content = return_content.replace(word, conv_word)
     
     return return_content
 
