@@ -34,17 +34,18 @@ def is_valid_message(content, return_type):
 def modify_link(content):
     # 문자열을 단어 단위로 분리
     words = content.split()
+    return_content = content
 
     for word in words:
         if re.fullmatch(pattern, word):
             # 트위터 링크라면 변경
-            content = content.replace("https://twitter.com", "https://vxtwitter.com").replace("https://x.com", "https://vxtwitter.com")
+            return_content = return_content.replace("https://twitter.com", "https://vxtwitter.com").replace("https://x.com", "https://vxtwitter.com")
 
             if content.lstrip().startswith(("스포)", "!스포", "!s", "s_")):
                 # 스포 시 링크 가리기
-                content = content.replace(word, "||"+word+"||")
+                return_content = return_content.replace(word, "||"+word+"||")
     
-    return content
+    return return_content
 
 @bot.event
 async def on_ready():
