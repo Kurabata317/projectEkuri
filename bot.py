@@ -50,17 +50,15 @@ async def on_message(message):
     if is_valid_message(message.content, "b"):
         await message.delete()
         modified_content = modify_link(message.content)
-    
+        sent_message = await message.channel.send(f'{message.author.mention}\n{modified_content}')
+
         original_link = is_valid_message(message.content, "s")
         
         view = discord.ui.View()
         view.add_item(discord.ui.Button(label="Open", style=discord.ButtonStyle.link, url=original_link.replace("x.com", "twitter.com")))
         view.add_item(discord.ui.Button(label="Delete", style=discord.ButtonStyle.danger, custom_id=f"delete_{sent_message.id}"))
-    
-        sent_message = await message.channel.send(
-            f'{message.author.mention}\n{modified_content}',
-            view=view
-        )
+
+        await sent_message.edit(view=view)
         
 @bot.event
 async def on_interaction(interaction):
