@@ -9,13 +9,13 @@ intents.message_content = True
 
 bot = commands.Bot(command_prefix='!', intents=intents)
 
+# 정규식 패턴
+pattern = r"(?<!`)https://twitter\.com/[a-zA-Z_0-9]+/status/.*?(?!`)"
+
 # 메시지 조건 확인 함수
 def is_valid_message(content, return_type):
     if content.startswith('// ignore'):
         return False
-
-    # 정규식 패턴
-    pattern = r"(?<!`)https://twitter\.com/[a-zA-Z_0-9]+/status/.*?(?!`)"
 
     matches = re.findall(pattern, content)
     
@@ -32,7 +32,17 @@ def is_valid_message(content, return_type):
 
 # 메시지의 링크를 수정하는 함수
 def modify_link(content):
-    return content.replace("https://twitter.com", "https://vxtwitter.com").replace("https://x.com", "https://vxtwitter.com")
+    # 문자열을 단어 단위로 분리
+    words = content.split()
+
+    for word in words:
+        if re.fullmatch(pattern, word):
+            # 트위터 링크라면 변경
+            content.replace("https://twitter.com", "https://vxtwitter.com").replace("https://x.com", "https://vxtwitter.com")
+        
+        if content.startswith(("스포)", "!스포", "!s", "s_")):
+            # 스포 시 링크 가리기
+            content.replace(word, "||"+word+"||")
 
 @bot.event
 async def on_ready():
