@@ -11,7 +11,7 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 
 # 메시지 조건 확인 함수
 def is_valid_message(content, return_type):
-    if '```' in content or content.startswith('// ignore'):
+    if content.startswith('// ignore'):
         return False
 
     # 정규식 패턴
