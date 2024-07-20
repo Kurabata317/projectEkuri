@@ -39,11 +39,13 @@ def modify_link(content):
     for word in words:
         if re.fullmatch(pattern, word):
             # 트위터 링크라면 변경
-            return_content = return_content.replace("https://twitter.com", "https://vxtwitter.com").replace("https://x.com", "https://vxtwitter.com")
+            conv_word = word.replace("https://twitter.com", "https://vxtwitter.com").replace("https://x.com", "https://vxtwitter.com")
 
             if content.lstrip().startswith(("스포)", "!스포", "!s", "s_")):
                 # 스포 시 링크 가리기
-                return_content = return_content.replace(word, "||"+word+"||")
+                conv_word = "||"+conv_word+"||"
+                
+            return_content.replace(word, conv_word)
     
     return return_content
 
