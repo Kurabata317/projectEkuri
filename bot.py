@@ -17,11 +17,28 @@ def is_valid_message(content, return_type):
     if content.startswith('// ignore'):
         return False
 
-    matches = re.findall(pattern, content)
-    
-    if len(matches) == 1:
+    findcount = 0
+
+    link = None
+    for word in content:
+        if re.fullmatch(pattern, word):
+            wdsp = word.split("https://")
+            findcount = findcount + 1
+            
+            if findcount == 1:
+                link = "https://" + wdsp[len(wdsp)]
+                migihidari = content.split(link)
+                
+                if content.startswith(("스포)", "!스포", "!s", "s_")) and(
+                    len(migihidari) == 1 or
+                    len(migihidari) == 2 and migihidari[0].count("||") % 2 == 1 and migihidari[1].count("||") % 2 == 1
+                ) == False:
+                    # 스포 시 링크 가리기
+                    conv_word = "||"+conv_word+"||"
+
+    if findcount == 1:
         if return_type == "s":
-            return matches[0]
+            return link
         else:
             return True
     else:
@@ -67,7 +84,7 @@ async def on_message(message):
         modified_content = modify_link(message.content)
         sent_message = await message.channel.send(f'{message.author.mention}\n{modified_content}')
 
-        original_link = original_link = [word for word in message.content.split() if word.startswith("https://twitter.com") or word.startswith("https://x.com")][0]
+        original_link = is_valid_message(message.content, "s")
         
         view = discord.ui.View()
         view.add_item(discord.ui.Button(label="Open", style=discord.ButtonStyle.link, url=original_link.replace("x.com", "twitter.com")))
