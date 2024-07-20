@@ -19,8 +19,6 @@ def is_valid_message(content, return_type):
 
     matches = re.findall(pattern, content)
     
-    print(matches)
-    
     if len(matches) == 1:
         if return_type == "s":
             return matches[0]
@@ -69,7 +67,7 @@ async def on_message(message):
         modified_content = modify_link(message.content)
         sent_message = await message.channel.send(f'{message.author.mention}\n{modified_content}')
 
-        original_link = is_valid_message(message.content, "s")
+        original_link = original_link = [word for word in message.content.split() if word.startswith("https://twitter.com") or word.startswith("https://x.com")][0]
         
         view = discord.ui.View()
         view.add_item(discord.ui.Button(label="Open", style=discord.ButtonStyle.link, url=original_link.replace("x.com", "twitter.com")))
