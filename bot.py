@@ -40,7 +40,7 @@ def modify_link(content):
             # 트위터 링크라면 변경
             content = content.replace("https://twitter.com", "https://vxtwitter.com").replace("https://x.com", "https://vxtwitter.com")
 
-            if content.strip().startswith(("스포)", "!스포", "!s", "s_")):
+            if content.lstrip().startswith(("스포)", "!스포", "!s", "s_")):
                 # 스포 시 링크 가리기
                 content = content.replace(word, "||"+word+"||")
     
