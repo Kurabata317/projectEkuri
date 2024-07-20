@@ -10,7 +10,7 @@ intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 
 # 정규식 패턴
-pattern = r"^(?!.*`)(https://twitter\.com/|https://x\.com/)[a-zA-Z_0-9]+/status/[^`]*(?<!`)$"
+pattern = r"^(?!`)(https://twitter\.com/|https://x\.com/)[a-zA-Z_0-9]+/status/[^`]*(?<!`)"
 
 # 메시지 조건 확인 함수
 def is_valid_message(content, return_type):
