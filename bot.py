@@ -21,7 +21,7 @@ def is_valid_message(content, return_type):
     
     if len(matches) == 1:
         if return_type == "s":
-            return len(matches)[0]
+            return matches[0]
         else:
             return True
     else:
