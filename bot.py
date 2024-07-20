@@ -27,14 +27,6 @@ def is_valid_message(content, return_type):
             
             if findcount == 1:
                 link = "https://" + wdsp[1]
-                migihidari = content.split(link)
-                
-                if content.startswith(("스포)", "!스포", "!s", "s_")) and(
-                    len(migihidari) == 1 or
-                    len(migihidari) == 2 and migihidari[0].count("||") % 2 == 1 and migihidari[1].count("||") % 2 == 1
-                ) == False:
-                    # 스포 시 링크 가리기
-                    conv_word = "||"+conv_word+"||"
 
     if findcount == 1:
         if return_type == "s":
@@ -58,7 +50,10 @@ def modify_link(content):
             # 트위터 링크라면 변경
             conv_word = word.replace("https://twitter.com", "https://vxtwitter.com").replace("https://x.com", "https://vxtwitter.com")
 
-            if content.startswith(("스포)", "!스포", "!s", "s_")):
+            migihidari = content.split("https://")
+            if content.startswith(("스포)", "!스포", "!s", "s_")) and(
+                len(migihidari) == 2 and migihidari[0].count("||") % 2 == 1 and migihidari[1].count("||") % 2 == 1
+            ) == False:
                 # 스포 시 링크 가리기
                 conv_word = "||"+conv_word+"||"
                 
