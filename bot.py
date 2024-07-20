@@ -74,7 +74,12 @@ async def on_message(message):
     if message.author == bot.user:
         return
 
-    if is_valid_message(message.content, "b"):
+    # 메시지 내용이 JSON 응답 키 중 하나와 일치하는지 확인
+    response = responses.get(message.content)
+    if response:
+        await message.channel.send(response)
+        
+    elif is_valid_message(message.content, "b"):
         await message.delete()
         modified_content = modify_link(message.content)
         sent_message = await message.channel.send(f'{message.author.mention}\n{modified_content}')
@@ -101,21 +106,6 @@ async def on_interaction(interaction):
 # JSON 파일에서 대화 내역 별 응답을 로드
 with open('responses.json', 'r', encoding='utf-8') as f:
     responses = json.load(f)
-
-# 이스터에그
-@bot.event
-async def on_message(message):
-    # 봇 자신이 보낸 메시지에 반응하지 않도록 설정
-    if message.author == bot.user:
-        return
-
-    # 메시지 내용이 JSON 응답 키 중 하나와 일치하는지 확인
-    response = responses.get(message.content)
-    if response:
-        await message.channel.send(response)
-
-    # on_message 이벤트가 다른 명령어와 충돌하지 않도록 설정
-    await bot.process_commands(message)
 
 # config.json에서 봇 토큰을 불러오는 함수
 def load_config():
