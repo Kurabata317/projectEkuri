@@ -20,7 +20,7 @@ def is_valid_message(content, return_type):
     findcount = 0
 
     link = None
-    for word in content:
+    for word in content.split():
         if re.fullmatch(pattern, word):
             wdsp = word.split("https://")
             findcount = findcount + 1
