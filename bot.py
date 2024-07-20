@@ -43,6 +43,8 @@ def modify_link(content):
         if content.startswith(("스포)", "!스포", "!s", "s_")):
             # 스포 시 링크 가리기
             content.replace(word, "||"+word+"||")
+            
+    return content
 
 @bot.event
 async def on_ready():
