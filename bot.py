@@ -1,4 +1,5 @@
 import json
+import re
 import discord
 from discord.ext import commands
 
@@ -9,11 +10,25 @@ intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 
 # 메시지 조건 확인 함수
-def is_valid_message(content):
-    if '```' in content:
+def is_valid_message(content, return_type):
+    if '```' in content or content.startswith('// ignore'):
         return False
-    links = [word for word in content.split() if word.startswith("https://twitter.com") or word.startswith("https://x.com")]
-    return len(links) == 1
+
+    # 정규식 패턴
+    pattern = r"(https://twitter\.com/|https://x\.com/)[a-zA-Z_]+/status/"
+
+    matches = re.findall(pattern, content)
+    
+    if len(matches) == 1:
+        if return_type == "s":
+            return len(matches)[0]
+        else:
+            return True
+    else:
+        if return_type == "s":
+            return None
+        else:
+            return False
 
 # 메시지의 링크를 수정하는 함수
 def modify_link(content):
@@ -32,19 +47,21 @@ async def on_message(message):
     if message.author == bot.user:
         return
 
-    if is_valid_message(message.content):
+    if is_valid_message(message.content, "b"):
         await message.delete()
         modified_content = modify_link(message.content)
-        sent_message = await message.channel.send(f'{message.author.mention}\n{modified_content}')
-
-        original_link = [word for word in message.content.split() if word.startswith("https://twitter.com") or word.startswith("https://x.com")][0]
+    
+        original_link = is_valid_message(message.content, "s")
+        
         view = discord.ui.View()
         view.add_item(discord.ui.Button(label="Open", style=discord.ButtonStyle.link, url=original_link.replace("x.com", "twitter.com")))
-        # view.add_item(discord.ui.Button(label="X", style=discord.ButtonStyle.link, url=original_link.replace("twitter.com", "x.com")))
         view.add_item(discord.ui.Button(label="Delete", style=discord.ButtonStyle.danger, custom_id=f"delete_{sent_message.id}"))
-
-        await sent_message.edit(view=view)
-
+    
+        sent_message = await message.channel.send(
+            f'{message.author.mention}\n{modified_content}',
+            view=view
+        )
+        
 @bot.event
 async def on_interaction(interaction):
     if interaction.data['custom_id'].startswith("delete_"):
