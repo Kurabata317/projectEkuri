@@ -15,7 +15,7 @@ def is_valid_message(content, return_type):
         return False
 
     # 정규식 패턴
-    pattern = r"(https://twitter\.com/|https://x\.com/)[a-zA-Z_]+/status/\d+"
+    pattern = r"(https://twitter\.com/|https://x\.com/)[a-zA-Z_]+/status/.*"
 
     matches = re.findall(pattern, content)
     
