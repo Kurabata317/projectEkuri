@@ -26,7 +26,7 @@ def is_valid_message(content, return_type):
             findcount = findcount + 1
             
             if findcount == 1:
-                link = "https://" + wdsp[len(wdsp)]
+                link = "https://" + wdsp[1]
                 migihidari = content.split(link)
                 
                 if content.startswith(("스포)", "!스포", "!s", "s_")) and(
