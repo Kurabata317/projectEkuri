@@ -10,7 +10,7 @@ intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 
 # 정규식 패턴
-pattern = r"(?<!`)(https://twitter\.com/|https://x\.com/)[a-zA-Z_0-9]+/status/[^`]*(?<!`)$"
+pattern = r"(?:\|\|)?(?<!`)(https://twitter\.com/|https://x\.com/)[a-zA-Z_0-9]+/status/[^`]*(?<!`)(?:\|\|)?$"
 
 # 메시지 조건 확인 함수
 def is_valid_message(content, return_type):
@@ -58,7 +58,7 @@ def modify_link(content):
                 conv_word = "||"+conv_word+"||"
                 
             return_content = return_content.replace(word, conv_word)
-    
+
     return return_content
 
 @bot.event
@@ -66,7 +66,7 @@ async def on_ready():
     print(f'{bot.user} has connected to Discord!')
     
     # 보는 중 상태 설정
-    activity = discord.Activity(type=discord.ActivityType.watching, name="대책위원회 3장 챕터4")
+    activity = discord.Activity(type=discord.ActivityType.watching, name="호시노(임전) 메모리얼 로비")
     await bot.change_presence(status=discord.Status.online, activity=activity)
 
 @bot.event
